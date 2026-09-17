@@ -36,8 +36,8 @@ charge of Rs. 75.00 and a surcharge of 5% on everything above.
 
 ```
 Units consumed : 350
-Energy charge: Rs. 1000.0
-Fixed charge: Rs. 75.0
+Energy charge: Rs. 1000.00
+Fixed charge: Rs. 75.00
 Surcharge: Rs. 53.75
 Final bill: Rs. 1128.75
 ```
@@ -128,4 +128,8 @@ Anything outside 2 to 10 prints `Invalid N`.
 
 ## Requirements
 
-Java 17 or newer.
+Java 21.
+
+The programs use Java 21 language features: record and sealed types with record
+deconstruction patterns in `switch`, switch expressions, text blocks, `var`,
+try-with-resources over `Scanner`, and streams.

@@ -1,68 +1,96 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 class Assignment2Program {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
 
-        System.out.print("Enter Age : ");
-        int age = sc.nextInt();
+    record Applicant(int age, long income, int score, long existingEmi, long proposedEmi) {
 
-        System.out.print("Enter Monthly Income : ");
-        long income = sc.nextLong();
-
-        System.out.print("Enter Credit score : ");
-        int score = sc.nextInt();
-
-        System.out.print("Enter Existing EMI : ");
-        long existingEmi = sc.nextLong();
-
-        System.out.print("Enter Proposed EMI : ");
-        long proposedEmi = sc.nextLong();
-
-        boolean eligible = true;
-
-        if (age < 21 || age > 60) {
-            System.out.println("Rejected: age must be between 21 and 60.");
-            eligible = false;
-        }
-        if (income < 25000) {
-            System.out.println("Rejected: monthly income must be at least 25000.");
-            eligible = false;
-        }
-        if (score < 650) {
-            System.out.println("Rejected: credit score must be at least 650.");
-            eligible = false;
+        long totalEmi() {
+            return existingEmi + proposedEmi;
         }
 
-        if (eligible) {
-            long emiLimit = income * 40 / 100;
-            long totalEmi = existingEmi + proposedEmi;
-
-            double combined = ((double) totalEmi / income) * 100;
-            combined = Math.round(combined * 100.0) / 100.0;
-            System.out.println("Combined EMI percentage: " + combined + "%");
-
-            if (totalEmi > emiLimit) {
-                System.out.println("Rejected: combined EMI exceeds 40% of monthly income.");
-                eligible = false;
-            }
+        long emiLimit() {
+            return income * 40 / 100;
         }
 
-        if (eligible) {
-            double rate;
+        double emiPercentage() {
+            var percentage = ((double) totalEmi() / income) * 100;
+            return Math.round(percentage * 100.0) / 100.0;
+        }
+
+        double interestRate() {
             if (score > 750) {
-                rate = 8.5;
-            } else if (score >= 700) {
-                rate = 10.0;
-            } else {
-                rate = 12.0;
+                return 8.5;
             }
-            System.out.println("Applicable annual interest rate: " + rate + "%");
-            System.out.println("Loan status: Eligible");
-        } else {
-            System.out.println("Loan status: Not eligible");
+            if (score >= 700) {
+                return 10.0;
+            }
+            return 12.0;
         }
+    }
 
-        sc.close();
+    sealed interface Decision permits Approved, Rejected {}
+
+    record Approved(double interestRate) implements Decision {}
+
+    record Rejected(List<String> reasons) implements Decision {}
+
+    static List<String> basicChecks(Applicant applicant) {
+        var reasons = new ArrayList<String>();
+        if (applicant.age() < 21 || applicant.age() > 60) {
+            reasons.add("age must be between 21 and 60");
+        }
+        if (applicant.income() < 25000) {
+            reasons.add("monthly income must be at least 25000");
+        }
+        if (applicant.score() < 650) {
+            reasons.add("credit score must be at least 650");
+        }
+        return reasons;
+    }
+
+    public static void main(String[] args) {
+        try (var scanner = new Scanner(System.in)) {
+            System.out.print("Enter Age : ");
+            var age = scanner.nextInt();
+
+            System.out.print("Enter Monthly Income : ");
+            var income = scanner.nextLong();
+
+            System.out.print("Enter Credit score : ");
+            var score = scanner.nextInt();
+
+            System.out.print("Enter Existing EMI : ");
+            var existingEmi = scanner.nextLong();
+
+            System.out.print("Enter Proposed EMI : ");
+            var proposedEmi = scanner.nextLong();
+
+            var applicant = new Applicant(age, income, score, existingEmi, proposedEmi);
+            var reasons = basicChecks(applicant);
+
+            if (reasons.isEmpty()) {
+                System.out.println("Combined EMI percentage: " + applicant.emiPercentage() + "%");
+                if (applicant.totalEmi() > applicant.emiLimit()) {
+                    reasons.add("combined EMI exceeds 40% of monthly income");
+                }
+            }
+
+            Decision decision = reasons.isEmpty()
+                    ? new Approved(applicant.interestRate())
+                    : new Rejected(List.copyOf(reasons));
+
+            switch (decision) {
+                case Approved(double rate) -> {
+                    System.out.println("Applicable annual interest rate: " + rate + "%");
+                    System.out.println("Loan status: Eligible");
+                }
+                case Rejected(List<String> why) -> {
+                    why.forEach(reason -> System.out.println("Rejected: " + reason + "."));
+                    System.out.println("Loan status: Not eligible");
+                }
+            }
+        }
     }
 }

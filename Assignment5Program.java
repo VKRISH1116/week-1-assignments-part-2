@@ -1,42 +1,30 @@
 import java.util.Scanner;
+import java.util.stream.IntStream;
 
 class Assignment5Program {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
 
-        System.out.print("N: ");
-        int n = sc.nextInt();
-
-        if (n < 2 || n > 10) {
-            System.out.println("Invalid N");
-            sc.close();
-            return;
-        }
-
-        for (int row = 1; row <= n; row++) {
-            printRow(n, row);
-        }
-        for (int row = n - 1; row >= 1; row--) {
-            printRow(n, row);
-        }
-
-        sc.close();
+    static String row(int n, int starsRow) {
+        var padding = " ".repeat(n - starsRow);
+        var width = 2 * starsRow - 1;
+        var body = width == 1 ? "*" : "*" + " ".repeat(width - 2) + "*";
+        return padding + body;
     }
 
-    static void printRow(int n, int row) {
-        for (int i = 1; i <= n - row; i++) {
-            System.out.print(" ");
-        }
+    public static void main(String[] args) {
+        try (var scanner = new Scanner(System.in)) {
+            System.out.print("N: ");
+            var n = scanner.nextInt();
 
-        int width = 2 * row - 1;
-        for (int i = 1; i <= width; i++) {
-            if (i == 1 || i == width) {
-                System.out.print("*");
-            } else {
-                System.out.print(" ");
+            if (n < 2 || n > 10) {
+                System.out.println("Invalid N");
+                return;
             }
-        }
 
-        System.out.println();
+            IntStream.concat(
+                            IntStream.rangeClosed(1, n),
+                            IntStream.iterate(n - 1, i -> i >= 1, i -> i - 1))
+                    .mapToObj(starsRow -> row(n, starsRow))
+                    .forEach(System.out::println);
+        }
     }
 }

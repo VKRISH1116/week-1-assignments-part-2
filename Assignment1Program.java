@@ -1,43 +1,53 @@
 import java.util.Scanner;
 
 class Assignment1Program {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
 
-        System.out.print("Units consumed : ");
-        int units = sc.nextInt();
+    static final double FIXED_CHARGE = 75.00;
+    static final double SURCHARGE_RATE = 0.05;
 
-        if (units < 0) {
-            System.out.println("Units consumed cannot be negative.");
-            sc.close();
-            return;
+    record Bill(double energyCharge, double fixedCharge, double surcharge) {
+
+        static Bill forUnits(int units) {
+            var energy = energyChargeFor(units);
+            return new Bill(energy, FIXED_CHARGE, (energy + FIXED_CHARGE) * SURCHARGE_RATE);
         }
 
-        double energyCharge = 0;
-
-        if (units <= 100) {
-            energyCharge = units * 1.50;
-        } else if (units <= 200) {
-            energyCharge = (100 * 1.50) + ((units - 100) * 2.50);
-        } else if (units <= 500) {
-            energyCharge = (100 * 1.50) + (100 * 2.50) + ((units - 200) * 4.00);
-        } else {
-            energyCharge = (100 * 1.50) + (100 * 2.50) + (300 * 4.00) + ((units - 500) * 6.00);
+        double total() {
+            return energyCharge + fixedCharge + surcharge;
         }
-
-        double fixedCharge = 75.00;
-        double surcharge = (energyCharge + fixedCharge) * 0.05;
-        double finalBill = energyCharge + fixedCharge + surcharge;
-
-        System.out.println("Energy charge: Rs. " + round2(energyCharge));
-        System.out.println("Fixed charge: Rs. " + round2(fixedCharge));
-        System.out.println("Surcharge: Rs. " + round2(surcharge));
-        System.out.println("Final bill: Rs. " + round2(finalBill));
-
-        sc.close();
     }
 
-    static double round2(double value) {
-        return Math.round(value * 100.0) / 100.0;
+    static double energyChargeFor(int units) {
+        if (units <= 100) {
+            return units * 1.50;
+        }
+        if (units <= 200) {
+            return (100 * 1.50) + ((units - 100) * 2.50);
+        }
+        if (units <= 500) {
+            return (100 * 1.50) + (100 * 2.50) + ((units - 200) * 4.00);
+        }
+        return (100 * 1.50) + (100 * 2.50) + (300 * 4.00) + ((units - 500) * 6.00);
+    }
+
+    public static void main(String[] args) {
+        try (var scanner = new Scanner(System.in)) {
+            System.out.print("Units consumed : ");
+            var units = scanner.nextInt();
+
+            if (units < 0) {
+                System.out.println("Units consumed cannot be negative.");
+                return;
+            }
+
+            var bill = Bill.forUnits(units);
+
+            System.out.print("""
+                    Energy charge: Rs. %.2f
+                    Fixed charge: Rs. %.2f
+                    Surcharge: Rs. %.2f
+                    Final bill: Rs. %.2f
+                    """.formatted(bill.energyCharge(), bill.fixedCharge(), bill.surcharge(), bill.total()));
+        }
     }
 }
